@@ -1,64 +1,71 @@
-🎓 API Performance Optimization Project
-📌 Objective
+📄  API Performance Optimization Project
+🎯 Objectif du projet
 
-Analyze and improve the performance of a REST API under heavy load.
+Améliorer la performance d’une API REST sous forte charge.
+Technologies : Node.js + Express + MySQL (+ cache mémoire et Redis pour optimisation).
 
-Experiment 1 — Baseline (No Cache)
-🛠 Tech Stack
+🛠️ Stack utilisée
 
-Node.js
+Node.js / Express
 
-Express
+MySQL (base de données réelle, 10k+ users, 50k+ commandes, 200k+ order_items)
 
-MySQL
+Redis (cache distribué)
 
-autocannon
+Autocannon (outil de test de charge)
 
-📊 Database Volume
-
-10,000 users
-
-5,000 products
-
-50,000 orders
-
-~200,000 order_items
-
-Bulk inserted using transactions.
-
-🔍 Tested Endpoint
+📌 Endpoint testé
 
 GET /top-customers
 
-Complex SQL query using:
+SQL complexe avec JOIN, GROUP BY, ORDER BY, SUM et COUNT
 
-JOIN
+Retourne les 10 meilleurs clients en fonction des dépenses totales
+📊 Comparaison des performances
+| Phase|Cache | Latence moyenne | Req/sec moyenne | Max latency | Total requests | Total data |
+| -----| -----| --------------- | --------------- | ----------- | -------------- | ---------- |
+| Ph 1 | Aucun| 5623 ms | 1 | 8309 ms| 400| 38.6 KB|
+| Ph 2 | RAM (mémoire locale)| 8 ms| 11 067| 52 ms| 332k| 444 MB|
+| Ph 3 | Redis (TTL 60s, distribué)| 16.6 ms| 5 857| 135 ms| 176k| 236 MB|
 
-GROUP BY
+🔍 Observations
 
-ORDER BY
+1️⃣ Phase 1 (Baseline)
 
-Aggregations
+Très lente sous forte charge
 
-🚀 Load Test Configuration
-autocannon -c 100 -d 30 http://localhost:3000/top-customers
+Timeouts fréquents
 
-100 concurrent connections
+SQL complexe saturait MySQL
 
-30 seconds duration
+2️⃣ Phase 2 (RAM Cache)
 
-📉 Results (No Cache)
+Latence < 10 ms
 
-Average latency: 5623 ms
+Très haut débit (Req/sec)
 
-Requests/sec: 1 req/sec
+Parfait pour requêtes répétitives sur un seul serveur
 
-270 timeouts
+Non persistant et limité à la RAM locale
 
-High saturation under load
+3️⃣ Phase 3 (Redis Cache)
 
-🧠 Conclusion
+Latence légèrement supérieure à RAM locale (TCP overhead)
 
-Without caching, the API struggles under concurrent load due to heavy SQL aggregation queries on large datasets.
+Req/sec élevé et stable
 
-Next step: Implement in-memory cache.
+Persistance et partage multi-instance
+
+TTL = 60 s → cache se rafraîchit automatiquement
+
+Production-ready et adapté à architecture distribuée
+
+⚡ Conclusion
+
+L’ajout d’un cache améliore drastiquement les performances d’une API REST.
+
+Cache RAM → idéal pour serveur unique et répétition de requêtes fréquentes.
+
+Redis → indispensable pour architecture distribuée et production.
+
+Ce projet montre l’importance d’optimiser les endpoints SQL lourds avec un cache adapté.

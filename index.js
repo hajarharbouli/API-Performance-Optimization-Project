@@ -1,3 +1,14 @@
+const redis = require('redis');
+
+//  Connecter Redis
+const redisClient = redis.createClient({
+  url: 'redis://localhost:6379'
+});
+
+redisClient.connect()
+  .then(() => console.log(" Redis connected"))
+  .catch(err => console.error(" Redis connection error", err));
+//--------------------------------------------------------------------------  
 const express = require('express');
 const mysql = require('mysql2/promise');
 
@@ -16,9 +27,20 @@ const db = mysql.createPool({
 //  ROUTE API (ICI )
 app.get('/top-customers', async (req, res) => {
   try {
-
     const start = Date.now();
 
+    // 1️ Vérifier Redis
+    const cached = await redisClient.get('top_customers');
+    if (cached) {
+      const end = Date.now();
+      return res.json({
+        source: "Redis Cache",
+        execution_time_ms: end - start,
+        data: JSON.parse(cached)
+      });
+    }
+
+    // 2️ Sinon → MySQL
     const [rows] = await db.query(`
       SELECT 
         u.id,
@@ -34,9 +56,12 @@ app.get('/top-customers', async (req, res) => {
       LIMIT 10
     `);
 
-    const end = Date.now();
+    // 3️ Stocker dans Redis avec TTL 60 secondes
+    await redisClient.setEx('top_customers', 60, JSON.stringify(rows));
 
+    const end = Date.now();
     res.json({
+      source: "MySQL",
       execution_time_ms: end - start,
       data: rows
     });
