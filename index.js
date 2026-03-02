@@ -1,3 +1,4 @@
+let memoryCache = null;
 const express = require('express');
 const mysql = require('mysql2/promise');
 
@@ -19,6 +20,17 @@ app.get('/top-customers', async (req, res) => {
 
     const start = Date.now();
 
+    // 1️ Vérifier cache mémoire
+    if (memoryCache) {
+      const end = Date.now();
+      return res.json({
+        source: "RAM Cache",
+        execution_time_ms: end - start,
+        data: memoryCache
+      });
+    }
+
+    //  Sinon → MySQL
     const [rows] = await db.query(`
       SELECT 
         u.id,
@@ -34,9 +46,12 @@ app.get('/top-customers', async (req, res) => {
       LIMIT 10
     `);
 
+    memoryCache = rows; //  Stocker en mémoire
+
     const end = Date.now();
 
     res.json({
+      source: "MySQL",
       execution_time_ms: end - start,
       data: rows
     });
@@ -46,7 +61,6 @@ app.get('/top-customers', async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
-
 //  Lancer le serveur
 app.listen(3000, () => {
   console.log("Server running on http://localhost:3000");

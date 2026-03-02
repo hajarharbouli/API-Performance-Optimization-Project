@@ -3,18 +3,11 @@
 
 Analyze and improve the performance of a REST API under heavy load.
 
-Experiment 1 — Baseline (No Cache)
-🛠 Tech Stack
+Phase 1 — Baseline (No Cache)
 
-Node.js
+Tech Stack: Node.js + Express + MySQL
 
-Express
-
-MySQL
-
-autocannon
-
-📊 Database Volume
+Database Volume:
 
 10,000 users
 
@@ -24,41 +17,62 @@ autocannon
 
 ~200,000 order_items
 
-Bulk inserted using transactions.
+Tested Endpoint: GET /top-customers
+Complex SQL query using JOIN, GROUP BY, ORDER BY, Aggregations
 
-🔍 Tested Endpoint
+Load Test (Autocannon):
 
-GET /top-customers
-
-Complex SQL query using:
-
-JOIN
-
-GROUP BY
-
-ORDER BY
-
-Aggregations
-
-🚀 Load Test Configuration
 autocannon -c 100 -d 30 http://localhost:3000/top-customers
 
-100 concurrent connections
+Results:
 
-30 seconds duration
+Avg latency: 5623 ms
 
-📉 Results (No Cache)
-
-Average latency: 5623 ms
-
-Requests/sec: 1 req/sec
+Requests/sec: 1
 
 270 timeouts
 
 High saturation under load
 
-🧠 Conclusion
-
+Conclusion:
 Without caching, the API struggles under concurrent load due to heavy SQL aggregation queries on large datasets.
 
-Next step: Implement in-memory cache.
+Phase 2 — In-Memory Cache (RAM)
+
+Modification:
+
+Added memory cache in Node.js
+
+First request queries MySQL
+
+Subsequent requests served from RAM
+
+Endpoint: GET /top-customers
+
+Same SQL query as baseline
+
+Load Test (Autocannon):
+
+autocannon -c 100 -d 30 http://localhost:3000/top-customers
+
+Results:
+
+Avg latency: 8 ms ✅
+
+Requests/sec: 11,067 ✅
+
+Max latency: 52 ms
+
+0 timeouts
+
+Observation:
+
+Latency reduced by ~700x
+
+Throughput massively improved
+
+Cache drastically reduces database load
+
+Conclusion:
+In-memory cache is extremely effective for repeated queries and dramatically improves API performance under high load.
+
