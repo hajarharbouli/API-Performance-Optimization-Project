@@ -29,17 +29,6 @@ Req/sec : 7 144
 ✅ Cache partagé entre instances
 ✅ Très faible charge sur MySQL
 
-📈 Graphique ASCII
-Latence (ms)
-Phase 1 |████████████████████████████████████████████████| 5623 ms
-Phase 2 |██                                              | 8 ms
-Phase 3 |███                                             | 16 ms
-Multi   |██                                              | 6 ms
-Requests/sec
-Phase 1 |█                                               | 1
-Phase 2 |██████████████████████████████████████████████  | 11067
-Phase 3 |██████████████████████                          | 5857
-Multi   |████████████████████████                        | ~7200 per instance
 
 RAM vs Redis — Conclusion Technique
 
